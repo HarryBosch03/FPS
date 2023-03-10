@@ -1,17 +1,16 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public class Pair<TA, TB>
+namespace Code.Scripts.Utility
 {
-    public TA a;
-    public TB b;
-
-    public Pair () { }
-
-    public Pair (TA a, TB b)
+    public class Pair<TA, TB>
     {
-        this.a = a;
-        this.b = b;
+        public TA a;
+        public TB b;
+
+        public Pair () { }
+
+        public Pair (TA a, TB b)
+        {
+            this.a = a;
+            this.b = b;
+        }
     }
 }

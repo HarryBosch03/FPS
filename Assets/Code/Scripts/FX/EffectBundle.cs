@@ -1,13 +1,14 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class EffectBundle : MonoBehaviour
+namespace Code.Scripts.FX
 {
-    [SerializeField] float duration;
-
-    private void Awake()
+    public class EffectBundle : MonoBehaviour
     {
-        Destroy(gameObject, duration);
+        [SerializeField] float duration;
+
+        private void Awake()
+        {
+            Destroy(gameObject, duration);
+        }
     }
 }

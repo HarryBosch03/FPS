@@ -1,61 +1,65 @@
 using System.Collections.Generic;
+using Code.Scripts.Weapons;
 using UnityEngine;
 
-public class PlayerWeaponManager : MonoBehaviour
+namespace Code.Scripts.Player
 {
-    [SerializeField] string defaultGun;
-
-    List<IWeapon> weapons;
-    public IWeapon CurrentGun { get; private set; }
-
-    public bool Shoot { get; set; }
-
-    private void Awake()
+    public class PlayerWeaponManager : MonoBehaviour
     {
-        weapons = new List<IWeapon>(GetComponentsInChildren<IWeapon>());
-    }
+        [SerializeField] string defaultGun;
 
-    private void Start()
-    {
-        foreach (var weapon in weapons)
+        List<IWeapon> weapons;
+        public IWeapon CurrentGun { get; private set; }
+
+        public bool Shoot { get; set; }
+
+        private void Awake()
         {
-            weapon.gameObject.SetActive(false);
+            weapons = new List<IWeapon>(GetComponentsInChildren<IWeapon>());
         }
 
-        EquipGun(defaultGun);
-    }
-
-    private void Update()
-    {
-        UpdateCurrentWeapon();
-    }
-
-    private void UpdateCurrentWeapon()
-    {
-        if (CurrentGun == null) return;
-
-        CurrentGun.Shoot = Shoot;
-    }
-
-    private void EquipGun(string gunName)
-    {
-        UnequipGun();
-
-        CurrentGun = weapons.Find(e => CompareNames(e.name, gunName));
-        if (CurrentGun != null)
+        private void Start()
         {
-            CurrentGun.gameObject.SetActive(true);
-        }
-    }
+            foreach (var weapon in weapons)
+            {
+                weapon.gameObject.SetActive(false);
+            }
 
-    private void UnequipGun()
-    {
-        if (CurrentGun != null)
+            EquipGun(defaultGun);
+        }
+
+        private void Update()
         {
-            CurrentGun.gameObject.SetActive(false);
+            UpdateCurrentWeapon();
         }
-    }
 
-    public bool CompareNames(string a, string b) => SimplifyName(a) == SimplifyName(b);
-    public string SimplifyName(string text) => string.IsNullOrEmpty(text) ? string.Empty : text.Trim().Replace(" ", "").ToLower();
+        private void UpdateCurrentWeapon()
+        {
+            if (CurrentGun == null) return;
+
+            CurrentGun.Shoot = Shoot;
+        }
+
+        private void EquipGun(string gunName)
+        {
+            UnequipGun();
+
+            CurrentGun = weapons.Find(e => CompareNames(e.name, gunName));
+            if (CurrentGun != null)
+            {
+                CurrentGun.gameObject.SetActive(true);
+            }
+        }
+
+        private void UnequipGun()
+        {
+            if (CurrentGun != null)
+            {
+                CurrentGun.gameObject.SetActive(false);
+            }
+        }
+
+        public bool CompareNames(string a, string b) => SimplifyName(a) == SimplifyName(b);
+        public string SimplifyName(string text) => string.IsNullOrEmpty(text) ? string.Empty : text.Trim().Replace(" ", "").ToLower();
+    }
 }

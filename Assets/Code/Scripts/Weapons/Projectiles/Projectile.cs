@@ -1,65 +1,64 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
-public class Projectile : MonoBehaviour
+namespace Code.Scripts.Weapons.Projectiles
 {
-    const float SkinWidth = 0.1f;
-
-    [SerializeField] float radius;
-    [SerializeField] LayerMask collisionMask;
-
-    [Space]
-    [SerializeField] GameObject hitPrefab;
-
-    Rigidbody rigidbody;
-
-    float damage, speed, lifetime, scale;
-    float startTime;
-
-    private void Awake()
+    [RequireComponent(typeof(Rigidbody))]
+    public class Projectile : MonoBehaviour
     {
-        rigidbody = GetComponent<Rigidbody>();
-    }
+        private const float SkinWidth = 0.1f;
 
-    private void Start()
-    {
-        rigidbody.velocity = transform.forward * speed;
-        rigidbody.useGravity = false;
-        transform.localScale = Vector3.one * scale;
+        [SerializeField] private float radius;
+        [SerializeField] private LayerMask collisionMask;
+        
+        private new Rigidbody rigidbody;
 
-        startTime = Time.time;
-    }
+        private float speed, lifetime, scale;
+        private float startTime;
+        public ProjectileHitCallback callback;
 
-    private void FixedUpdate()
-    {
-        var speed = rigidbody.velocity.magnitude;
-        var ray = new Ray(rigidbody.position, rigidbody.velocity);
-        if (Physics.SphereCast(ray, radius * scale, out var hit, speed * Time.deltaTime + SkinWidth, collisionMask))
+        private void Awake()
         {
-            if (hitPrefab)
+            rigidbody = GetComponent<Rigidbody>();
+        }
+
+        private void Start()
+        {
+            rigidbody.velocity = transform.forward * speed;
+            rigidbody.useGravity = false;
+            transform.localScale = Vector3.one * scale;
+
+            startTime = Time.time;
+        }
+
+        private void FixedUpdate()
+        {
+            var currentSpeed = rigidbody.velocity.magnitude;
+            var ray = new Ray(rigidbody.position, rigidbody.velocity);
+            if (Physics.SphereCast(ray, radius * scale, out var hit, currentSpeed * Time.deltaTime + SkinWidth, collisionMask))
             {
-                Instantiate(hitPrefab, hit.point, Quaternion.LookRotation(hit.normal));
+                callback(this, hit);
+                Destroy(gameObject);
             }
 
-            Destroy(gameObject);
+            if (Time.time - startTime > lifetime)
+            {
+                Destroy(gameObject);
+            }
         }
 
-        if (Time.time - startTime > lifetime)
+        public Projectile Spawn(Transform muzzlePoint, ProjectileHitCallback callback, float speed, float lifetime, float scale = 1.0f, bool useGravity = true)
         {
-            Destroy(gameObject);
+            var instance = Instantiate(this, muzzlePoint.position, muzzlePoint.rotation);
+            instance.speed = speed;
+            instance.lifetime = lifetime;
+            instance.scale = scale;
+            instance.callback = callback;
+
+            instance.rigidbody.useGravity = useGravity;
+
+            return instance;
         }
-    }
 
-    public Projectile Spawn(Transform muzzlePoint, float damage, float speed, float lifetime, float scale = 1.0f, bool useGravity = true)
-    {
-        var instance = Instantiate(this, muzzlePoint.position, muzzlePoint.rotation);
-        instance.damage = damage;
-        instance.speed = speed;
-        instance.lifetime = lifetime;
-        instance.scale = scale;
-
-        instance.rigidbody.useGravity = useGravity;
-
-        return instance;
+        public delegate void ProjectileHitCallback(Projectile projectile, RaycastHit hit);
     }
 }

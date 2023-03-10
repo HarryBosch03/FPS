@@ -1,29 +1,32 @@
 using UnityEngine;
 
-[RequireComponent(typeof(PlayerBipedController))]
-public class PlayerCameraDriver : MonoBehaviour
+namespace Code.Scripts.Player
 {
-    [SerializeField] float cameraSway;
-    [SerializeField] float maxCamSway;
-
-    Transform target;
-
-    PlayerBipedController bipedController;
-
-    private void Awake()
+    [RequireComponent(typeof(PlayerBipedController))]
+    public class PlayerCameraDriver : MonoBehaviour
     {
-        bipedController = GetComponent<PlayerBipedController>();
-    }
+        [SerializeField] float cameraSway;
+        [SerializeField] float maxCamSway;
 
-    private void Start()
-    {
-        target = bipedController.Head.GetChild(0);
-    }
+        Transform target;
 
-    private void Update()
-    {
-        float sway = Vector3.Dot(transform.right, bipedController.RelativeVelocity) * cameraSway;
-        sway = Mathf.Clamp(sway, -maxCamSway, maxCamSway);
-        target.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, -sway);
+        PlayerBipedController bipedController;
+
+        private void Awake()
+        {
+            bipedController = GetComponent<PlayerBipedController>();
+        }
+
+        private void Start()
+        {
+            target = bipedController.Head.GetChild(0);
+        }
+
+        private void Update()
+        {
+            float sway = Vector3.Dot(transform.right, bipedController.RelativeVelocity) * cameraSway;
+            sway = Mathf.Clamp(sway, -maxCamSway, maxCamSway);
+            target.transform.localRotation = Quaternion.Euler(0.0f, 0.0f, -sway);
+        }
     }
 }

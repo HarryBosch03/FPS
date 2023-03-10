@@ -1,10 +1,14 @@
+using Code.Scripts.UI;
 using UnityEditor;
 
-[CustomEditor(typeof(SegmentedSliderUI))]
-public class SegmentedSliderUIEditor : Editor
+namespace Code.Scripts.Editor.Editors
 {
-    public override void OnInspectorGUI()
+    [CustomEditor(typeof(SegmentedSliderUI))]
+    public class SegmentedSliderUIEditor : UnityEditor.Editor
     {
-        base.OnInspectorGUI();
+        public override void OnInspectorGUI()
+        {
+            base.OnInspectorGUI();
+        }
     }
 }

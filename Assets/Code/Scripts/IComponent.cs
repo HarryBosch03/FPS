@@ -1,10 +1,13 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+// ReSharper disable InconsistentNaming
+// #FuckUnity
 
-public interface IComponent
+namespace Code.Scripts
 {
-    string name { get; }
-    GameObject gameObject { get; }
-    Transform transform { get; }
+    public interface IComponent
+    {
+        string name { get; }
+        GameObject gameObject { get; }
+        Transform transform { get; }
+    }
 }
