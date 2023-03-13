@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Code.Scripts.Utility;
 using Code.Scripts.Weapons;
 using UnityEngine;
 
@@ -6,9 +7,9 @@ namespace Code.Scripts.Player
 {
     public class PlayerWeaponManager : MonoBehaviour
     {
-        [SerializeField] string defaultGun;
+        [SerializeField] private string defaultGun;
 
-        List<IWeapon> weapons;
+        private List<IWeapon> weapons;
         public IWeapon CurrentGun { get; private set; }
 
         public bool Shoot { get; set; }
@@ -45,21 +46,14 @@ namespace Code.Scripts.Player
             UnequipGun();
 
             CurrentGun = weapons.Find(e => CompareNames(e.name, gunName));
-            if (CurrentGun != null)
-            {
-                CurrentGun.gameObject.SetActive(true);
-            }
+            CurrentGun?.gameObject.SetActive(true);
         }
 
         private void UnequipGun()
         {
-            if (CurrentGun != null)
-            {
-                CurrentGun.gameObject.SetActive(false);
-            }
+            CurrentGun?.gameObject.SetActive(false);
         }
 
-        public bool CompareNames(string a, string b) => SimplifyName(a) == SimplifyName(b);
-        public string SimplifyName(string text) => string.IsNullOrEmpty(text) ? string.Empty : text.Trim().Replace(" ", "").ToLower();
+        public bool CompareNames(string a, string b) => Util.SimplifyName(ref a) == Util.SimplifyName(ref b);
     }
 }

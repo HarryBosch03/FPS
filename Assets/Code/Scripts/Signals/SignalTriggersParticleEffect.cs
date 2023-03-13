@@ -1,15 +1,14 @@
-using Code.Scripts.Editor_Tools;
 using UnityEngine;
 
 namespace Code.Scripts.Signals
 {
-    [RequireComponent(typeof(ParticleSystem))]
     public class SignalTriggersParticleEffect : MonoBehaviour
     {
-        [SerializeField][CannotBeNull] private Signal signal;
+        [SerializeField] private string signalName;
         [SerializeField] private bool global = false;
-
+        
         private ParticleSystem[] systems;
+        private SignalListener listener;
 
         private void Awake()
         {
@@ -18,18 +17,16 @@ namespace Code.Scripts.Signals
         
         private void OnEnable()
         {
-            signal.RaiseEvent += OnRaise;
+            listener = new SignalListener(signalName, OnRaise, gameObject, global);
         }
 
         private void OnDisable()
         {
-            signal.RaiseEvent -= OnRaise;
+            listener.Deregister();
         }
 
-        private void OnRaise(GameObject caller)
+        private void OnRaise()
         {
-            if (!transform.IsChildOf(caller.transform) && !global) return;
-            
             foreach (var system in systems) system.Play();
         }
     }

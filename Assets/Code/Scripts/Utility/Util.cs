@@ -25,5 +25,19 @@ namespace Code.Scripts.Utility
 
             return true;
         }
+
+        public static string SimplifyName(string text) => SimplifyName(ref text);
+        public static string SimplifyName(ref string text) => string.IsNullOrEmpty(text) ? string.Empty : text.Trim().Replace(" ", "").ToLower();
+        
+        public static bool CompareNames(string a, string b)
+        {
+            a = SimplifyName(a);
+            b = SimplifyName(b);
+            
+            if (string.IsNullOrWhiteSpace(a) && string.IsNullOrWhiteSpace(b)) return true;
+            if (string.IsNullOrWhiteSpace(a) || string.IsNullOrWhiteSpace(b)) return false;
+            
+            return a == b;
+        }
     }
 }

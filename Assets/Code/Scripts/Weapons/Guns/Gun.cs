@@ -1,9 +1,9 @@
-using System.Collections.Generic;
 using Cinemachine;
 using Code.Scripts.Biped;
 using Code.Scripts.Health;
 using Code.Scripts.Player;
 using Code.Scripts.Utility;
+using Code.Scripts.Signals;
 using Code.Scripts.Weapons.Projectiles;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -23,7 +23,6 @@ namespace Code.Scripts.Weapons.Guns
 
         [Space]
         [SerializeField] protected GameObject hitEffect;
-        [SerializeField] protected List<ParticleSystem> shootEffects;
 
         private bool shootLast;
         protected float lastShootTime;
@@ -35,9 +34,15 @@ namespace Code.Scripts.Weapons.Guns
         private Animator animator;
 
         private CinemachineVirtualCamera virtualCamera;
+        private Camera cam;
 
         public BipedController Biped { get; set; }
         public bool Shoot { get; set; }
+
+        private void Start()
+        {
+            cam = Camera.main;
+        }
 
         protected virtual void Awake()
         {
@@ -68,8 +73,8 @@ namespace Code.Scripts.Weapons.Guns
             animator.Play($"Shoot{fireAnimationIndex}", 0, 0.0f);
             if (fireAnimationCount > 0) fireAnimationIndex = (fireAnimationIndex + 1) % fireAnimationCount;
 
-            shootEffects.ForEach(e => e.Play());
-
+            Signal.Call("shoot", gameObject);
+            
             lastShootTime = Time.time;
         }
 
@@ -80,7 +85,6 @@ namespace Code.Scripts.Weapons.Guns
             if (!virtualCamera && Biped is PlayerBipedController) return p1;
 
             var p2 = ToV4(p1);
-            var cam = Camera.main;
             var vCamTransform = virtualCamera.transform;
 
             var camToClip = Matrix4x4.Perspective(cam.fieldOfView, cam.aspect, cam.nearClipPlane, cam.farClipPlane).inverse;
