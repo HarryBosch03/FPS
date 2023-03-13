@@ -32,8 +32,14 @@ namespace Code.Scripts.Weapons.Guns
 
         public override bool Fire()
         {
+            if (!singleFire && !burst && !auto) return false;
+            
             if (Time.time - Gun.LastShootTime < 60.0f / fireRate) return false;
-
+            
+            if (fireModeIndex == 0 && !singleFire) fireModeIndex++;
+            if (fireModeIndex == 1 && !burst) fireModeIndex++;
+            if (fireModeIndex == 2 && !auto) fireModeIndex++;
+            
             var res = fireModeIndex switch
             {
                 0 => SingleFire(),

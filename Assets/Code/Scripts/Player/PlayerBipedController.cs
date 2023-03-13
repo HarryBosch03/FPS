@@ -1,34 +1,33 @@
 using Code.Scripts.Biped;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Code.Scripts.Player
 {
     public class PlayerBipedController : BipedController
     {
-        private Vector3 dashDirection;
-
-        [Space] [SerializeField] private float dashDistance;
-
+        [Space] 
+        [SerializeField] private float dashDistance;
         [SerializeField] private float dashDuration;
-        private bool dashing;
-
-        private bool dashLast;
+        
+        [Space] 
+        [SerializeField] private int maxDashCharges;
         [SerializeField] private float dashRechargeDelay;
         [SerializeField] private float dashRechargeTime;
+        [FormerlySerializedAs("velocityCancelation")] [SerializeField] [Range(0.0f, 1.0f)] private float dashVelocityCancellation;
+
+        [Space] 
+        [SerializeField] private float kickDamper;
+
+        private Vector3 dashDirection;
+        private float lastDashTime;
+        private bool dashing;
+        private bool dashLast;
         private float dashTime = float.NegativeInfinity;
 
-        private Vector2 kickAcceleration;
-        [SerializeField] private float kickDamper;
         private Vector2 kickPosition;
-
-        [Space] [SerializeField] private float kickSpring;
-
         private Vector2 kickVelocity;
-        private float lastDashTime;
-
-        [Space] [SerializeField] private int maxDashCharges;
-
-        [SerializeField] [Range(0.0f, 1.0f)] private float velocityCancelation;
+        private Vector2 kickAcceleration;
 
         public bool Dash { get; set; }
         public float DashCharge { get; private set; }
@@ -47,7 +46,6 @@ namespace Code.Scripts.Player
 
             DashAction();
 
-            kickAcceleration += -kickPosition * kickSpring;
             kickAcceleration += -kickVelocity * kickDamper;
 
             kickPosition += kickVelocity * Time.deltaTime;
@@ -67,11 +65,11 @@ namespace Code.Scripts.Player
                 if (dashTime <= dashDuration)
                 {
                     velocity = dashDirection * dashDistance / dashTime;
-                    acceleration = Vector3.zero;
+                    frameAcceleration = Vector3.zero;
                 }
                 else
                 {
-                    velocity = dashDirection * (dashDistance / dashTime) * velocityCancelation;
+                    velocity = dashDirection * ((dashDistance / dashTime) * dashVelocityCancellation);
                     dashing = false;
                 }
             }

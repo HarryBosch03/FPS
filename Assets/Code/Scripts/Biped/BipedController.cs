@@ -1,14 +1,14 @@
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using Code.Scripts.Utility;
 using UnityEngine;
-using System;
-using UnityEditor;
 
 namespace Code.Scripts.Biped
 {
+    [System.Serializable]
     public class BipedController : MonoBehaviour
     {
-        const float SkinWidth = 0.1f;
+        private const float SkinWidth = 0.1f;
 
         [SerializeField] private float moveSpeed = 15.0f;
         [SerializeField] private float accelerationTime = 0.1f;
@@ -38,7 +38,7 @@ namespace Code.Scripts.Biped
 
         public Vector3 MoveDirection { get; set; }
         public bool Jump { get; set; }
-        public Vector2 LookRotation { get; set; }
+        public virtual Vector2 LookRotation { get; set; }
         public Transform Head { get; private set; }
         public virtual Vector3 Gravity => Physics.gravity * (velocity.y > 0.0f && Jump ? jumpGravity : fallingGravity);
 
@@ -46,12 +46,12 @@ namespace Code.Scripts.Biped
         public Vector3 GroundVelocity { get; private set; }
         public Vector3 RelativeVelocity => velocity - GroundVelocity;
 
-    private void Awake()
-    {
-        Head = transform.Find("Head");
+        private void Awake()
+        {
+            Head = transform.Find("Head");
 
-        colliders = GetComponentsInChildren<Collider>();
-    }
+            colliders = GetComponentsInChildren<Collider>();
+        }
 
         private void FixedUpdate()
         {
@@ -59,7 +59,7 @@ namespace Code.Scripts.Biped
 
             PerformChecks();
 
-            Actions();
+            FixedUpdateActions();
 
             PhysicsStuff();
             SetNextFrameFlags();
@@ -70,7 +70,7 @@ namespace Code.Scripts.Biped
             CheckForGround();
         }
 
-        protected virtual void Actions ()
+        protected virtual void FixedUpdateActions ()
         {
             Move();
             JumpAction();

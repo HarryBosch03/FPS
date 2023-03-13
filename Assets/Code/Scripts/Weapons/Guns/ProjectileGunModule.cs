@@ -3,15 +3,15 @@ using UnityEngine;
 
 namespace Code.Scripts.Weapons.Guns
 {
-    public class ProjectileGun : Gun
+    public class ProjectileGunModule : GunEffect
     {
         [SerializeField] private Projectile projectilePrefab;
         [SerializeField] private float speed, size = 1.0f, lifetime;
         [SerializeField] private bool gravity = true;
         
-        protected override void ShootAction()
+        public override void Execute()
         {
-            projectilePrefab.Spawn(shootPoint, baseDamage, speed, size, lifetime, gravity, IsPlayer);
+            projectilePrefab.Spawn(Gun.ShootPoint, Gun.Damage, speed, size, lifetime, gravity, Gun.IsPlayer);
         }
     }
 }

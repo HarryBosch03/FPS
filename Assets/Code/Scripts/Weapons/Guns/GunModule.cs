@@ -10,7 +10,7 @@ namespace Code.Scripts.Weapons.Guns
 
         protected virtual void Awake()
         {
-            Gun = GetComponent<GunController>();
+            Gun = GetComponentInParent<GunController>();
         }
     }
 }
