@@ -1,76 +1,105 @@
-using System;
+using Code.Scripts.Biped;
 using UnityEngine;
 
-public class PlayerBipedController : BipedController
+namespace Code.Scripts.Player
 {
-    [Space]
-    [SerializeField] float dashDistance;
-    [SerializeField] float dashDuration;
-    [SerializeField][Range(0.0f, 1.0f)] float velocityCancelation;
-
-    [Space]
-    [SerializeField] int maxDashCharges;
-    [SerializeField] float dashRechargeTime;
-    [SerializeField] float dashRechargeDelay;
-
-    bool dashLast;
-    bool dashing;
-    float dashTime = float.NegativeInfinity;
-    Vector3 dashDirection;
-    float dashCharge;
-    float lastDashTime;
-
-    public bool Dash { get; set; }
-    public float DashCharge => dashCharge;
-    public int MaxDashCharges => maxDashCharges;
-
-    protected override void Actions()
+    public class PlayerBipedController : BipedController
     {
-        base.Actions();
+        private Vector3 dashDirection;
 
-        DashAction();
-    }
+        [Space] [SerializeField] private float dashDistance;
 
-    private void DashAction()
-    {
-        if (Grounded && Time.time - lastDashTime > dashRechargeDelay)
+        [SerializeField] private float dashDuration;
+        private bool dashing;
+
+        private bool dashLast;
+        [SerializeField] private float dashRechargeDelay;
+        [SerializeField] private float dashRechargeTime;
+        private float dashTime = float.NegativeInfinity;
+
+        private Vector2 kickAcceleration;
+        [SerializeField] private float kickDamper;
+        private Vector2 kickPosition;
+
+        [Space] [SerializeField] private float kickSpring;
+
+        private Vector2 kickVelocity;
+        private float lastDashTime;
+
+        [Space] [SerializeField] private int maxDashCharges;
+
+        [SerializeField] [Range(0.0f, 1.0f)] private float velocityCancelation;
+
+        public bool Dash { get; set; }
+        public float DashCharge { get; private set; }
+
+        public int MaxDashCharges => maxDashCharges;
+
+        public override Vector2 LookRotation
         {
-            dashCharge += Time.deltaTime / dashRechargeTime;
-        }
-        dashCharge = Mathf.Clamp(dashCharge, 0.0f, maxDashCharges);
-
-        if (dashing)
-        {
-            if (dashTime <= dashDuration)
-            {
-                velocity = dashDirection * dashDistance / dashTime;
-                acceleration = Vector3.zero;
-            }
-            else
-            {
-                velocity = dashDirection * (dashDistance / dashTime) * velocityCancelation;
-                dashing = false;
-            }
+            get => base.LookRotation + kickPosition;
+            set => base.LookRotation = value - kickPosition;
         }
 
-        if (!Dash) return;
-        if (dashLast) return;
-        if (dashCharge <= 0.95f) return;
+        protected override void FixedUpdateActions()
+        {
+            base.FixedUpdateActions();
 
-        if (MoveDirection.sqrMagnitude < 0.1f * 0.1f) return;
+            DashAction();
 
-        dashDirection = transform.TransformDirection(MoveDirection).normalized;
-        dashing = true;
-        dashTime = 0.0f;
-        dashCharge--;
-        lastDashTime = Time.time;
-    }
+            kickAcceleration += -kickPosition * kickSpring;
+            kickAcceleration += -kickVelocity * kickDamper;
 
-    protected override void SetNextFrameFlags()
-    {
-        base.SetNextFrameFlags();
+            kickPosition += kickVelocity * Time.deltaTime;
+            kickVelocity += kickAcceleration * Time.deltaTime;
 
-        dashLast = Dash;
-        dashTime += Time.deltaTime;
+            kickAcceleration = Vector2.zero;
+        }
+
+        private void DashAction()
+        {
+            if (Grounded && Time.time - lastDashTime > dashRechargeDelay)
+                DashCharge += Time.deltaTime / dashRechargeTime;
+            DashCharge = Mathf.Clamp(DashCharge, 0.0f, maxDashCharges);
+
+            if (dashing)
+            {
+                if (dashTime <= dashDuration)
+                {
+                    velocity = dashDirection * dashDistance / dashTime;
+                    acceleration = Vector3.zero;
+                }
+                else
+                {
+                    velocity = dashDirection * (dashDistance / dashTime) * velocityCancelation;
+                    dashing = false;
+                }
+            }
+
+            if (!Dash) return;
+            if (dashLast) return;
+            if (DashCharge <= 0.95f) return;
+
+            if (MoveDirection.sqrMagnitude < 0.1f * 0.1f) return;
+
+            dashDirection = transform.TransformDirection(MoveDirection).normalized;
+            dashing = true;
+            dashTime = 0.0f;
+            DashCharge--;
+            lastDashTime = Time.time;
+        }
+
+        protected override void SetNextFrameFlags()
+        {
+            base.SetNextFrameFlags();
+
+            dashLast = Dash;
+            dashTime += Time.deltaTime;
+        }
+
+        public void KickCamera(Vector2 kick)
+        {
+            kickAcceleration += kick;
+        }
     }
 }
