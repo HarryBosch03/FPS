@@ -1,17 +1,22 @@
 using Code.Scripts.Utility;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Scriptable Objects/Inventory/Item Type")]
-public class ItemType : ScriptableObject
+namespace Code.Scripts.Player.Inventory
 {
-    public int maxStackSize;
-    
-    public string ReferenceName { get; private set; }
-    public Sprite Icon { get; private set; }
-    
-    public void OnEnable()
+    [CreateAssetMenu(menuName = "Scriptable Objects/Inventory/Item Type")]
+    public class ItemType : ScriptableObject
     {
-        ReferenceName = Util.SimplifyName(name);
-        Icon = ItemAssetRegister.Lookup[ReferenceName];
+        public int maxStackSize = 100;
+        public Mesh mesh;
+        public Material[] materials;
+        
+        public string ReferenceName { get; private set; }
+        public Sprite Icon { get; private set; }
+        
+        public void OnEnable()
+        {
+            ReferenceName = Util.SimplifyName(name);
+            Icon = ItemAssetRegister.Lookup(ReferenceName);
+        }
     }
 }

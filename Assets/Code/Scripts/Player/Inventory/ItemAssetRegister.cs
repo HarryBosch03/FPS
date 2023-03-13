@@ -2,30 +2,35 @@ using System.Collections.Generic;
 using Code.Scripts.Utility;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Scriptable Objects/Inventory/Item Asset Register")]
-public class ItemAssetRegister : ScriptableObject
+namespace Code.Scripts.Player.Inventory
 {
-    public Sprite[] icons;
-
-    private static Dictionary<string, Sprite> lookup;
-
-    public static Dictionary<string, Sprite> Lookup
+    [CreateAssetMenu(menuName = "Scriptable Objects/Inventory/Item Asset Register")]
+    public class ItemAssetRegister : ScriptableObject
     {
-        get
-        {
-            if (lookup != null) return lookup;
+        private const string Fallback = "fallback";
 
-            lookup = new Dictionary<string, Sprite>();
-            var registers = FindObjectsOfType<ItemAssetRegister>();
-            foreach (var register in registers)
+        private Sprite[] icons;
+        
+        private static Dictionary<string, Sprite> lookup;
+
+        public static Sprite Lookup(string reference)
+        {
+            if (lookup == null)
             {
-                foreach (var entry in register.icons)
+                lookup = new Dictionary<string, Sprite>();
+                var registers = FindObjectsOfType<ItemAssetRegister>();
+                foreach (var register in registers)
                 {
-                    lookup.Add(Util.SimplifyName(entry.name), entry);
+                    foreach (var entry in register.icons)
+                    {
+                        lookup.Add(Util.SimplifyName(entry.name), entry);
+                    }
                 }
             }
-            
-            return lookup;
+
+            if (lookup.ContainsKey(reference)) return lookup[reference];
+            if (lookup.ContainsKey(Fallback)) return lookup[Fallback];
+            return null;
         }
     }
 }

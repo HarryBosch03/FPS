@@ -1,39 +1,40 @@
 using Code.Scripts.Utility;
+using Code.Scripts.Biped;
 using UnityEngine;
 
 namespace Code.Scripts.Weapons.Guns
 {
-    public class HitscanGun : Gun
+    [RequireComponent(typeof(GunController))]
+    public class HitscanGunModule : GunEffect
     {
         [Space]
         [SerializeField] protected float tracerTime;
 
         protected LineRenderer shootTracer;
-
+        
         protected override void Awake()
         {
             base.Awake();
+            
             shootTracer = transform.DeepFindCallback("Tracer", t => t.GetComponent<LineRenderer>());
         }
 
-        protected override void Update()
+        protected void Update()
         {
-            if (shootTracer && Time.time - lastShootTime > tracerTime)
+            if (shootTracer && Time.time - Gun.LastShootTime > tracerTime)
             {
                 shootTracer.enabled = false;
             }
-
-            base.Update();
         }
 
-        protected override void ShootAction()
+        public override void Execute()
         {
             Vector3 end;
 
             if (Biped.TryGetLookingAt(out var hit))
             {
                 end = hit.point;
-                ProcessHit(hit);
+                Gun.ProcessHit(hit);
             }
             else
             {
@@ -44,8 +45,8 @@ namespace Code.Scripts.Weapons.Guns
             
             shootTracer.enabled = true;
             shootTracer.positionCount = 2;
-            shootTracer.SetPosition(0, BlendWithViewport(shootPoint.position, 1.0f));
-            shootTracer.SetPosition(1, BlendWithViewport(end, 0.0f));
+            shootTracer.SetPosition(0, Gun.BlendWithViewport(Gun.ShootPoint.position, 1.0f));
+            shootTracer.SetPosition(1, Gun.BlendWithViewport(end, 0.0f));
         }
     }
 }

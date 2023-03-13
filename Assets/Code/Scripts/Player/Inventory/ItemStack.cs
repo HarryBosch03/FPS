@@ -1,37 +1,40 @@
-public class ItemStack
+namespace Code.Scripts.Player.Inventory
 {
-    public ItemType Type { get; }
-    public int Amount { get; set; }
-
-    public ItemStack(ItemType type, int amount = 0)
+    public class ItemStack
     {
-        Type = type;
-        Amount = amount;
-    }
+        public ItemType Type { get; }
+        public int Amount { get; set; }
 
-    public bool TryCombine(ItemStack other)
-    {
-        if (Type != other.Type) return false;
-
-        var total = Amount + other.Amount;
-        if (total > Type.maxStackSize)
+        public ItemStack(ItemType type, int amount = 0)
         {
-            Amount = Type.maxStackSize;
-            other.Amount = total - Amount;
-            return false;
+            Type = type;
+            Amount = amount;
         }
 
-        Amount = total;
-        other.Amount = 0;
-        return true;
-    }
+        public bool TryCombine(ItemStack other)
+        {
+            if (Type != other.Type) return false;
 
-    public static implicit operator bool(ItemStack stack)
-    {
-        if (stack == null) return false;
-        if (stack.Type == null) return false;
-        if (stack.Amount <= 0) return false;
+            var total = Amount + other.Amount;
+            if (total > Type.maxStackSize)
+            {
+                Amount = Type.maxStackSize;
+                other.Amount = total - Amount;
+                return false;
+            }
 
-        return true;
+            Amount = total;
+            other.Amount = 0;
+            return true;
+        }
+
+        public static implicit operator bool(ItemStack stack)
+        {
+            if (stack == null) return false;
+            if (stack.Type == null) return false;
+            if (stack.Amount <= 0) return false;
+
+            return true;
+        }
     }
 }

@@ -13,3 +13,6 @@ MonoBehaviour:
   m_Name: Plasma Cell
   m_EditorClassIdentifier: 
   maxStackSize: 60
+  mesh: {fileID: -3660275907326674588, guid: e738e25ba766cdeeb95e89f34662942f, type: 3}
+  materials:
+  - {fileID: 2100000, guid: b647e9b2173cac143853a0625652427a, type: 2}

@@ -2,92 +2,86 @@ using Cinemachine;
 using Code.Scripts.Biped;
 using Code.Scripts.Health;
 using Code.Scripts.Player;
+using Code.Scripts.Player.Inventory;
 using Code.Scripts.Utility;
 using Code.Scripts.Signals;
 using Code.Scripts.Weapons.Projectiles;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Code.Scripts.Weapons.Guns
 {
-    public abstract class Gun : MonoBehaviour, IWeapon
+    [SelectionBase]
+    [DisallowMultipleComponent]
+    public class GunController : MonoBehaviour, IWeapon
     {
         private const float ViewmodelFOV = 50.0f;
 
-        [FormerlySerializedAs("baseDamage")] [SerializeField] protected int damage;
+        [SerializeField] protected int damage;
         [SerializeField] protected float fireRate;
         [SerializeField] protected bool fullAuto;
 
-        [Space]
-        [SerializeField] protected int fireAnimationCount;
-
-        [Space]
-        [SerializeField] protected GameObject hitEffect;
-
-        private bool shootLast;
-        protected float lastShootTime;
-        private int fireAnimationIndex;
-        protected bool lastAbility;
-
-        protected Transform muzzle;
-        protected Transform shootPoint;
-        private Animator animator;
+        [Space] [SerializeField] protected GameObject hitEffect;
 
         private CinemachineVirtualCamera virtualCamera;
         private Camera cam;
 
+        private GunEffect effect;
+        private GunMagazine magazine;
+        private GunTrigger trigger;
+
+        public Animator Animator { get; private set; }
         public BipedController Biped { get; set; }
+        public Transform ShootPoint { get; private set; }
         public bool Shoot { get; set; }
+        public float LastShootTime { get; private set; }
+        
+        public const string SignalShoot = "shoot";
+
+        protected virtual void Awake()
+        {
+            Biped = GetComponentInParent<BipedController>();
+            Animator = GetComponentInChildren<Animator>();
+
+            ShootPoint = transform.DeepFind("Shoot Point");
+
+            var shoot = transform.Find("shoot");
+            effect = shoot.GetComponent<GunEffect>();
+            magazine = shoot.GetComponent<GunMagazine>();
+            trigger = shoot.GetComponent<GunTrigger>();
+
+            virtualCamera = Biped.gameObject.GetComponentInChildren<CinemachineVirtualCamera>();
+        }
 
         private void Start()
         {
             cam = Camera.main;
         }
 
-        protected virtual void Awake()
-        {
-            Biped = GetComponentInParent<BipedController>();
-            animator = GetComponentInChildren<Animator>();
-
-            muzzle = transform.DeepFind("Muzzle");
-            shootPoint = transform.DeepFind("Shoot Point");
-
-            virtualCamera = Biped.gameObject.GetComponentInChildren<CinemachineVirtualCamera>();
-        }
-
         protected virtual void Update()
         {
             TryShoot();
-
-            shootLast = Shoot;
         }
 
         private void TryShoot()
         {
-            if (!Shoot) return;
-            if (shootLast && !fullAuto) return;
-            if (Time.time < lastShootTime + 60.0f / fireRate) return;
-
-            ShootAction();
-
-            animator.Play($"Shoot{fireAnimationIndex}", 0, 0.0f);
-            if (fireAnimationCount > 0) fireAnimationIndex = (fireAnimationIndex + 1) % fireAnimationCount;
-
-            Signal.Call("shoot", gameObject);
+            if (!trigger.Fire()) return;
+            if (magazine) if (!magazine.CanFire()) return;
             
-            lastShootTime = Time.time;
+            effect.Execute();
+            
+            Signal.Call(SignalShoot, gameObject);
+            LastShootTime = Time.time;
         }
 
-        protected abstract void ShootAction();
-
-        protected Vector3 BlendWithViewport(Vector3 p1, float percent)
+        public Vector3 BlendWithViewport(Vector3 p1, float percent)
         {
             if (!virtualCamera && Biped is PlayerBipedController) return p1;
 
             var p2 = ToV4(p1);
             var vCamTransform = virtualCamera.transform;
 
-            var camToClip = Matrix4x4.Perspective(cam.fieldOfView, cam.aspect, cam.nearClipPlane, cam.farClipPlane).inverse;
+            var camToClip = Matrix4x4.Perspective(cam.fieldOfView, cam.aspect, cam.nearClipPlane, cam.farClipPlane)
+                .inverse;
             var clipToView = Matrix4x4.Perspective(ViewmodelFOV, cam.aspect, cam.nearClipPlane, cam.farClipPlane);
 
             p2 = vCamTransform.worldToLocalMatrix * p2;
@@ -99,9 +93,10 @@ namespace Code.Scripts.Weapons.Guns
         }
 
         public Vector4 ToV4(Vector3 v) => new Vector4(v.x, v.y, v.z, 1.0f);
-        
-        protected void ProcessHit(Projectile p, RaycastHit hit) => ProcessHit(hit);
-        protected void ProcessHit(RaycastHit hit)
+
+        public void ProcessHit(Projectile p, RaycastHit hit) => ProcessHit(hit);
+
+        public void ProcessHit(RaycastHit hit)
         {
             Instantiate(hitEffect, hit.point, Quaternion.LookRotation(hit.normal));
 
