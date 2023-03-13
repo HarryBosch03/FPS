@@ -1,4 +1,6 @@
 using UnityEngine;
+// ReSharper disable InconsistentNaming
+// #FuckUnity
 
 namespace Code.Scripts
 {

@@ -1,7 +1,8 @@
-using System.Collections.Generic;
 using System.Linq;
-using Code.Scripts.Utility;
+using System.Collections.Generic;
 using UnityEngine;
+using System;
+using UnityEditor;
 
 namespace Code.Scripts.Biped
 {
@@ -9,33 +10,35 @@ namespace Code.Scripts.Biped
     {
         const float SkinWidth = 0.1f;
 
-        [SerializeField] float moveSpeed = 15.0f;
-        [SerializeField] float accelerationTime = 0.1f;
-        [SerializeField][Range(0.0f, 1.0f)] float airAccelerationPenalty = 0.2f;
+        [SerializeField] private float moveSpeed = 15.0f;
+        [SerializeField] private float accelerationTime = 0.1f;
+        [SerializeField][Range(0.0f, 1.0f)] private float airAccelerationPenalty = 0.2f;
 
         [Space]
-        [SerializeField] float jumpHeight = 4.0f;
-        [SerializeField] float jumpGravity = 3.0f;
-        [SerializeField] float fallingGravity = 3.0f;
+        [SerializeField] private float jumpHeight = 4.0f;
+        [SerializeField] private float jumpGravity = 3.0f;
+        [SerializeField] private float fallingGravity = 3.0f;
 
         [Space]
-        [SerializeField] int maxDoubleJumps = 1;
+        [SerializeField]
+        private int maxDoubleJumps = 1;
 
         [Space]
-        [SerializeField] float groundTestDistance = 1.0f;
-        [SerializeField] float groundTestRadius = 0.4f;
+        [SerializeField]
+        private float groundTestDistance = 1.0f;
+        [SerializeField] private float groundTestRadius = 0.4f;
     
         protected Vector3 position;
         protected Vector3 velocity;
-        protected Vector3 acceleration;
-        bool jumpLast;
-        int doubleJumpsLeft;
+        protected Vector3 frameAcceleration;
+        private bool jumpLast;
+        private int doubleJumpsLeft;
 
-        Collider[] colliders;
+        private Collider[] colliders;
 
         public Vector3 MoveDirection { get; set; }
         public bool Jump { get; set; }
-        public virtual Vector2 LookRotation { get; set; }
+        public Vector2 LookRotation { get; set; }
         public Transform Head { get; private set; }
         public virtual Vector3 Gravity => Physics.gravity * (velocity.y > 0.0f && Jump ? jumpGravity : fallingGravity);
 
@@ -43,20 +46,20 @@ namespace Code.Scripts.Biped
         public Vector3 GroundVelocity { get; private set; }
         public Vector3 RelativeVelocity => velocity - GroundVelocity;
 
-        private void Awake()
-        {
-            Head = transform.Find("Head");
+    private void Awake()
+    {
+        Head = transform.Find("Head");
 
-            colliders = GetComponentsInChildren<Collider>();
-        }
+        colliders = GetComponentsInChildren<Collider>();
+    }
 
-        protected void FixedUpdate()
+        private void FixedUpdate()
         {
-            acceleration = Gravity;
+            frameAcceleration = Gravity;
 
             PerformChecks();
 
-            FixedUpdateActions();
+            Actions();
 
             PhysicsStuff();
             SetNextFrameFlags();
@@ -67,7 +70,7 @@ namespace Code.Scripts.Biped
             CheckForGround();
         }
 
-        protected virtual void FixedUpdateActions ()
+        protected virtual void Actions ()
         {
             Move();
             JumpAction();
@@ -96,7 +99,7 @@ namespace Code.Scripts.Biped
 
             foreach (var result in results)
             {
-                float distance = result.point.y - position.y + SkinWidth;
+                var distance = result.point.y - position.y + SkinWidth;
 
                 if (result.transform.IsChildOf(transform)) continue;
                 if (distance < 0.0f) continue;
@@ -117,19 +120,19 @@ namespace Code.Scripts.Biped
 
         private void Move()
         {
-            float acceleration = 1.0f / accelerationTime;
+            var acceleration = 1.0f / accelerationTime;
             if (!Grounded) acceleration *= airAccelerationPenalty;
 
-            Vector3 target = transform.TransformDirection(MoveDirection) * moveSpeed;
-            Vector3 diff = (target - velocity);
+            var target = transform.TransformDirection(MoveDirection) * moveSpeed;
+            var diff = (target - velocity);
 
             diff.y = 0.0f;
             diff = Vector3.ClampMagnitude(diff, moveSpeed);
 
-            Vector3 force = diff * acceleration;
+            var force = diff * acceleration;
 
-            this.acceleration += force;
-            this.acceleration += GroundVelocity;
+            this.frameAcceleration += force;
+            this.frameAcceleration += GroundVelocity;
         }
 
         private void JumpAction()
@@ -144,24 +147,24 @@ namespace Code.Scripts.Biped
             }
 
             var jumpForce = Mathf.Sqrt(2.0f * -Physics.gravity.y * jumpGravity * jumpHeight);
-            acceleration += Vector3.up * jumpForce / Time.deltaTime;
+            frameAcceleration += Vector3.up * jumpForce / Time.deltaTime;
 
-            if (velocity.y < 0.0f) acceleration += Vector3.up * -velocity.y / Time.deltaTime;
+            if (velocity.y < 0.0f) frameAcceleration += Vector3.up * -velocity.y / Time.deltaTime;
         }
 
         private void Depenetrate()
         {
-            var others = DoBroardPhase();
+            var others = GetBroadPhase();
 
-            List<Pair<Vector3, float>> hits = new List<Pair<Vector3, float>>();
+            var hits = new List<Pair<Vector3, float>>();
 
-            foreach (var collider in colliders)
+            foreach (var self in colliders)
             {
                 foreach (var other in others)
                 {
                     if (other.transform.IsChildOf(transform)) continue;
 
-                    if (Physics.ComputePenetration(collider, collider.transform.position, collider.transform.rotation, other, other.transform.position, other.transform.rotation, out Vector3 direction, out float distance))
+                    if (Physics.ComputePenetration(self, self.transform.position, self.transform.rotation, other, other.transform.position, other.transform.rotation, out Vector3 direction, out float distance))
                     {
                         hits.Add(new Pair<Vector3, float>(direction, distance));
                     }
@@ -172,12 +175,12 @@ namespace Code.Scripts.Biped
             {
                 position += hit.a * hit.b;
 
-                float dot = Vector3.Dot(hit.a, velocity);
+                var dot = Vector3.Dot(hit.a, velocity);
                 if (dot < 0.0f) velocity -= hit.a * dot;
             }
         }
 
-        private Collider[] DoBroardPhase()
+        private Collider[] GetBroadPhase()
         {
             var bounds = GetBounds();
             return Physics.OverlapBox(bounds.center, bounds.extents);
@@ -186,9 +189,9 @@ namespace Code.Scripts.Biped
         public Bounds GetBounds ()
         {
             var bounds = colliders[0].bounds;
-            foreach (var collider in colliders)
+            foreach (var self in colliders)
             {
-                bounds.Encapsulate(collider.bounds);
+                bounds.Encapsulate(self.bounds);
             }
             bounds.Expand(SkinWidth);
             return bounds;
@@ -197,7 +200,7 @@ namespace Code.Scripts.Biped
         private void Integrate()
         {
             position += velocity * Time.deltaTime;
-            velocity += acceleration * Time.deltaTime;
+            velocity += frameAcceleration * Time.deltaTime;
             transform.position = position;
         }
 
@@ -216,21 +219,10 @@ namespace Code.Scripts.Biped
             Head.rotation = Quaternion.Euler(-LookRotation.y, LookRotation.x, 0.0f);
         }
 
-        public bool TryGetLookingAt(out RaycastHit hit) => TryGetLookingAt(out _, out hit);
-        public bool TryGetLookingAt (out Ray ray, out RaycastHit hit)
+        public bool TryGetLookingAt (out RaycastHit hit)
         {
-            ray = new Ray(Head.position, Head.forward);
+            var ray = new Ray(Head.position, Head.forward);
             return Physics.Raycast(ray, out hit);
-        }
-
-        private void Reset()
-        {
-            if (!transform.Find("Head"))
-            {
-                var head = new GameObject("Head").transform;
-                head.parent = transform;
-                head.localPosition = Vector3.up * 1.8f;
-            }
         }
     }
 }

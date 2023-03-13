@@ -5,11 +5,9 @@ namespace Code.Scripts.Utility
         public TA a;
         public TB b;
 
-        public Pair()
-        {
-        }
+        public Pair () { }
 
-        public Pair(TA a, TB b)
+        public Pair (TA a, TB b)
         {
             this.a = a;
             this.b = b;
